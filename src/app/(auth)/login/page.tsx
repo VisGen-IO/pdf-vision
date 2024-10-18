@@ -1,23 +1,19 @@
 'use client'
 // eslint-disable
-// import * as z from "zod"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
-// import { zodResolver } from "@hookform/resolvers/zod"
-// import { toast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { Form, FormControl,  FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-// import { signInSchema } from "@/schema/signInSchema"
-// import { signIn } from "next-auth/react"
+import { useToast } from "@/hooks/use-toast"
 
 const  SignIn =()=> {
+  const {toast}  = useToast()
   const router = useRouter();
   const [ isSubmitting, setIsSubmitting ] = useState<boolean>(false);
 
   const form = useForm({
-    // resolver: zodResolver(signInSchema),
     defaultValues: {
       identifier: '',
       password: '',
@@ -26,31 +22,12 @@ const  SignIn =()=> {
 
   
   const onSubmit = async (data: any) => {
-    // const result = await signIn('credentials', {
-    //   redirect: false,
-    //   identifier: data.identifier,
-    //   password: data.password,
-    // });console.log(result)
-
-    // if (result?.error) {
-    //   if (result.error === 'CredentialsSignin') {
-    //     toast({
-    //       title: 'Login Failed',
-    //       description: 'Incorrect username or password',
-    //       variant: 'destructive',
-    //     });
-    //   } else {
-    //     toast({
-    //       title: 'Error',
-    //       description: result.error,
-    //       variant: 'destructive',
-    //     });
-    //   }
-    // }
-
-    // if (result?.url) {
-    //   router.replace('/dashboard');
-    // }
+    document.cookie='access_token=[value]'
+    router.replace('/dashboard');
+    toast({
+      title: "Scheduled: Catch up",
+      description: "Friday, February 10, 2023 at 5:57 PM",
+    })
   };
 
   return (
