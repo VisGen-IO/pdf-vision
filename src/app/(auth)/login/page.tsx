@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
 
 const SignIn = () => {
   const { toast } = useToast();
@@ -28,12 +29,36 @@ const SignIn = () => {
   });
 
   const onSubmit = async (data: any) => {
-    document.cookie = "access_token=[value]";
-    router.replace("/dashboard");
-    toast({
-      title: "Scheduled: Catch up",
-      description: "Friday, February 10, 2023 at 5:57 PM",
-    });
+    try{
+        const resp:any = await axios.post("https://pdf-backend-wsqn.onrender.com/user_auth/login", {
+          id:data?.identifier,
+          password:data?.password
+      }, {
+          headers: {
+              "Accept": "application/json",
+              "Content-Type": "application/json"
+          }
+      });
+     
+      if (resp?.status ===200) {
+        document.cookie = `access_token=${resp?.data.access_token}; path=/; secure; samesite=strict;`;
+        router.replace("/dashboard");
+        toast({
+          title: "Login Successful",
+          description: "You are being redirected to the dashboard",
+        });
+      } else {
+        toast({
+          title: "Login Failed",
+          description: "Invalid login credentials",
+        });
+      }
+
+    }
+    catch(err){
+      console.error(err)
+    }
+   
   };
 
   return (
