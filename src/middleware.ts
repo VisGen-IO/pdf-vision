@@ -1,30 +1,29 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-export { default } from "next-auth/middleware"
-import { cookies } from 'next/headers'
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { cookies } from "next/headers";
 
-export async function middleware (request: NextRequest) {
-  const cookieStore = cookies()
-  const token = cookieStore.get('access_token')
+export async function middleware(request: NextRequest) {
+  const token = cookies().get("access_token")?.value;
+
   const url = request.nextUrl;
 
-  if(token && ( 
-    url.pathname.startsWith('/login') || 
-    url.pathname.startsWith('/sign-up') || 
-    url.pathname === '/'
-    )){
-    return NextResponse.redirect(new URL('/dashboard', request.url)) 
+  // Redirect to dashboard if logged in and accessing login or signup pages
+  if (
+    token &&
+    (url.pathname === "/login" ||
+      url.pathname === "/sign-up" ||
+      url.pathname === "/")
+  ) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
 
-  }
-  if(
-    !token && 
-    (url.pathname.startsWith('/dashboard'))
-    ){
-    return NextResponse.redirect(new URL('/login', request.url))
+  // Redirect to login if accessing dashboard without being logged in
+  if (!token && url.pathname.startsWith("/dashboard")) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 }
- 
-// See "Matching Paths" below to learn more
+
+// Define the routes where middleware should apply
 export const config = {
-  matcher: ['/signin','/signup', '/dashboard/:path*','/verify/:path*'],
-}
+  matcher: ["/", "/login", "/sign-up", "/dashboard/:path*"],
+};
