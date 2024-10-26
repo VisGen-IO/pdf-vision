@@ -14,15 +14,17 @@ import axios from "axios"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+
 
 const  SignUp =()=> {
 
   const router = useRouter();
-
   // states
   const [username, setUsername] = useState<string>('');
   const [isUserChecking, setIsUserChecking] = useState<boolean>(false);
   const [ isSubmitting, setIsSubmitting ] = useState<boolean>(false);
+  const [ isOrg, setIsOrg ] = useState<boolean>(false);
 
   // error message states
   const [usernameError, setUsernameError] = useState<string>('');
@@ -36,6 +38,7 @@ const  SignUp =()=> {
       username: '',
       email: '',
       password: '',
+      org_name:''
     }
   });
   // const { register, handleSubmit, formState: { errors } } = form;
@@ -64,16 +67,24 @@ const  SignUp =()=> {
   const onSubmit = async(data:any)=>{
     setIsSubmitting(true);
     try{
-      const response = await axios.post('/api/signup', data);
-      if(response?.data?.success){
+      const response = await axios.post("https://pdf-backend-wsqn.onrender.com/user_auth/signup", 
+       data
+    , {
+        headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        }
+    });
+      if(response?.status === 200){
         toast({
           title: 'Account created successfully',
-          description: response?.data?.message,
+          description: response?.data,
           variant: 'default'
         });
-        router.replace(`/verify/${username}`);
+        router.replace(`/login`);
         setIsSubmitting(false);
       }
+      // setIsSubmitting(false);
     }
     catch(error){
       setIsSubmitting(false);
@@ -157,13 +168,40 @@ const  SignUp =()=> {
                 />
               </FormItem>
             )}/>
+             <div className="flex items-center space-x-2">
+              <Checkbox   checked={isOrg}
+                  onCheckedChange={()=>(setIsOrg(!isOrg))}/>
+                <label
+                  htmlFor="terms2"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                 Is you creating a organisation account
+                </label>
+            </div>
+            {isOrg && <FormField control={form.control} name="org_name" render={()=>(
+              <FormItem>
+               <FormField
+                  name="org_name"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Organisation Name</FormLabel>
+                      <FormControl>
+                        <Input type="text" placeholder="organisation name" {...field} onChange={(e)=> field.onChange(e)}/>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </FormItem>
+            )}/>}
             <Button type="submit" disabled={isSubmitting} className="w-full">
               {isSubmitting ?  ' Please wait': 'Sign Up'  }
             </Button>
           </form>
         </Form>
         <div className="text-center mt-4">
-          <p>Already Member <Link href={'/signin'} className="text-blue-500 hover:underline">Sign In</Link></p>
+          <p>Already Member? <Link href={'/signin'} className="text-blue-500 hover:underline">Sign In</Link></p>
        </div>
       </div>
     </div>
