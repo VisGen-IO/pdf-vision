@@ -5,7 +5,7 @@ import { Element, PageSize } from "./types";
 import { ResizableElement } from "./resizable-element";
 import { Card } from "@/components/ui/card";
 
-const PAGE_SIZES: Record<PageSize, { width: number; height: number }> = {
+const PAGE_SIZES: Record<Exclude<PageSize, "Custom">, { width: number; height: number }> = {
   "A4": { width: 794, height: 1123 },
   "A3": { width: 1123, height: 1587 },
   "A5": { width: 559, height: 794 },
@@ -16,6 +16,7 @@ interface CanvasProps {
   elements: Element[];
   selectedElement: Element | null;
   pageSize: PageSize;
+  customDimensions?: { width: number; height: number };
   onSelect: (element: Element | null) => void;
   onDrop: (type: Element["type"], position: { x: number; y: number }, parentId?: string) => void;
   onUpdate: (element: Element) => void;
@@ -26,6 +27,7 @@ export function Canvas({
   elements,
   selectedElement,
   pageSize,
+  customDimensions,
   onSelect,
   onDrop,
   onUpdate,
@@ -76,7 +78,9 @@ export function Canvas({
   };
 
   const rootElements = elements.filter((element) => !element.parentId);
-  const pageDimensions = PAGE_SIZES[pageSize];
+  const pageDimensions = pageSize === "Custom" 
+    ? customDimensions 
+    : PAGE_SIZES[pageSize as Exclude<PageSize, "Custom">];
 
   return (
     <div className="flex-1 overflow-auto bg-neutral-100 p-8">
@@ -84,8 +88,8 @@ export function Canvas({
         ref={canvasRef}
         className="relative mx-auto bg-white shadow-lg"
         style={{
-          width: pageDimensions.width,
-          height: pageDimensions.height,
+          width: pageDimensions?.width || 800,
+          height: pageDimensions?.height || 1000,
         }}
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e)}

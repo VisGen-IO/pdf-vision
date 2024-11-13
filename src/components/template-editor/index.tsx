@@ -5,13 +5,17 @@ import { ElementToolbar } from "./element-toolbar";
 import { Canvas } from "./canvas";
 import { PropertyPanel } from "./property-panel";
 import { PageSettings } from "./page-settings";
-import { ElementType, Element, PageSize } from "./types"
+import { ElementType, Element, PageSize } from "./types";
 import { nanoid } from "./utils";
 
 export function TemplateEditor() {
   const [elements, setElements] = useState<Element[]>([]);
   const [selectedElement, setSelectedElement] = useState<Element | null>(null);
   const [pageSize, setPageSize] = useState<PageSize>("A4");
+  const [customDimensions, setCustomDimensions] = useState<{ width: number; height: number }>({
+    width: 800,
+    height: 1000,
+  });
 
   const handleDrop = (
     type: ElementType,
@@ -113,6 +117,7 @@ export function TemplateEditor() {
         conditions,
       })),
       pageSize,
+      customDimensions: pageSize === "Custom" ? customDimensions : undefined,
     };
     
     const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
@@ -131,7 +136,9 @@ export function TemplateEditor() {
       <div className="p-4 border-b">
         <PageSettings 
           pageSize={pageSize} 
+          customDimensions={customDimensions}
           onPageSizeChange={setPageSize}
+          onCustomDimensionsChange={setCustomDimensions}
           onExport={exportTemplate}
         />
       </div>
@@ -145,6 +152,7 @@ export function TemplateEditor() {
           onUpdate={updateElement}
           onDelete={deleteElement}
           pageSize={pageSize}
+          customDimensions={customDimensions}
         />
         <PropertyPanel
           element={selectedElement}
