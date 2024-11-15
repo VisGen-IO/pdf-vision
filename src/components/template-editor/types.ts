@@ -10,11 +10,16 @@ export type ElementType =
   | "table"
   | "shape";
 
-export type PageSize = "A4" | "A3" | "A5" | "Letter" | "Custom" | string;
+export type PageSize = "A4" | "A3" | "A5" | "Letter";
 
 export interface PageDimensions {
   width: number;
   height: number;
+}
+
+export interface DataBinding {
+  key?: string;
+  arrayPath?: string;
 }
 
 export interface Element {
@@ -30,6 +35,7 @@ export interface Element {
   };
   content: string;
   dynamicKey?: string;
+  dataBinding?: DataBinding;
   dataSource?: {
     array?: string;
     field?: string;
@@ -54,7 +60,6 @@ export interface Element {
     tableLayout?: string;
     borderCollapse?: string;
     shapeType?: string;
-    objectFit?: "cover" | "contain" | "fill" | "none";
     [key: string]: string | undefined;
   };
   conditions: Array<{

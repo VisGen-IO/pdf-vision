@@ -15,9 +15,12 @@ interface PropertyPanelProps {
   element: Element | null;
   onUpdate: (element: Element) => void;
   onDelete: (id: string) => void;
+  availableKeys: string[];
+  jsonData: any;
+  isArrayPath: (path: string) => boolean;
 }
 
-export function PropertyPanel({ element, onUpdate, onDelete }: PropertyPanelProps) {
+export function PropertyPanel({ element, onUpdate, onDelete, availableKeys, jsonData, isArrayPath }: PropertyPanelProps) {
   if (!element) {
     return (
       <Card className="w-80 h-full p-4 rounded-none border-l">
@@ -38,42 +41,56 @@ export function PropertyPanel({ element, onUpdate, onDelete }: PropertyPanelProp
     });
   };
 
+  const renderDataBindingControls = () => {
+    if (!jsonData) return null;
+
+    return (
+      <div className="space-y-4">
+        <div>
+          <Label>Data Binding</Label>
+          <Select
+            value={element.dataBinding?.key || ""}
+            onValueChange={(value) => {
+              const isArray = isArrayPath(value);
+              onUpdate({
+                ...element,
+                dataBinding: {
+                  key: value,
+                  arrayPath: isArray ? value : undefined
+                },
+                isRepeatable: isArray && element.type === "container"
+              });
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select data key" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableKeys.map((key) => (
+                <SelectItem key={key} value={key}>
+                  {key}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {element.type === "container" && element.dataBinding?.arrayPath && (
+          <div className="flex items-center space-x-2">
+            <Switch
+              checked={element.isRepeatable}
+              onCheckedChange={(checked) =>
+                onUpdate({ ...element, isRepeatable: checked })
+              }
+            />
+            <Label>Repeat for each item</Label>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderElementSpecificControls = () => {
     switch (element.type) {
-      case "container":
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={element.isRepeatable}
-                onCheckedChange={(checked) =>
-                  onUpdate({
-                    ...element,
-                    isRepeatable: checked,
-                    dataSource: checked ? { array: "products" } : undefined,
-                  })
-                }
-              />
-              <Label>Repeatable Container</Label>
-            </div>
-            {element.isRepeatable && (
-              <div>
-                <Label>Data Source Array</Label>
-                <Input
-                  value={element.dataSource?.array || ""}
-                  onChange={(e) =>
-                    onUpdate({
-                      ...element,
-                      dataSource: { ...element.dataSource, array: e.target.value },
-                    })
-                  }
-                  placeholder="e.g., products"
-                />
-              </div>
-            )}
-          </div>
-        );
-
       case "text":
       case "dynamic-text":
         return (
@@ -138,221 +155,6 @@ export function PropertyPanel({ element, onUpdate, onDelete }: PropertyPanelProp
           </div>
         );
 
-      case "button":
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Button Text</Label>
-              <Input
-                value={element.content}
-                onChange={(e) => onUpdate({ ...element, content: e.target.value })}
-                placeholder="Enter button text"
-              />
-            </div>
-            <div>
-              <Label>Variant</Label>
-              <Select
-                value={element.styles.variant || "default"}
-                onValueChange={(value) => updateStyle("variant", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="default">Default</SelectItem>
-                  <SelectItem value="secondary">Secondary</SelectItem>
-                  <SelectItem value="destructive">Destructive</SelectItem>
-                  <SelectItem value="outline">Outline</SelectItem>
-                  <SelectItem value="ghost">Ghost</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
-
-      case "link":
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Link Text</Label>
-              <Input
-                value={element.content}
-                onChange={(e) => onUpdate({ ...element, content: e.target.value })}
-                placeholder="Enter link text"
-              />
-            </div>
-            <div>
-              <Label>URL</Label>
-              <Input
-                value={element.href || ""}
-                onChange={(e) => onUpdate({ ...element, href: e.target.value })}
-                placeholder="Enter URL"
-              />
-            </div>
-          </div>
-        );
-
-      case "list":
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>List Type</Label>
-              <Select
-                value={element.styles.listStyle || "disc"}
-                onValueChange={(value) => updateStyle("listStyle", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="disc">Bullet</SelectItem>
-                  <SelectItem value="decimal">Numbered</SelectItem>
-                  <SelectItem value="none">None</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>List Items</Label>
-              {element.listItems?.map((item, index) => (
-                <div key={index} className="flex gap-2 mt-2">
-                  <Input
-                    value={item}
-                    onChange={(e) => {
-                      const newItems = [...(element.listItems || [])];
-                      newItems[index] = e.target.value;
-                      onUpdate({ ...element, listItems: newItems });
-                    }}
-                  />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => {
-                      const newItems = element.listItems?.filter((_, i) => i !== index);
-                      onUpdate({ ...element, listItems: newItems });
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() => {
-                  const newItems = [...(element.listItems || []), "New Item"];
-                  onUpdate({ ...element, listItems: newItems });
-                }}
-              >
-                Add Item
-              </Button>
-            </div>
-          </div>
-        );
-
-      case "table":
-        return (
-          <div className="space-y-4">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <Label>Rows</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={element.tableData?.rows || 2}
-                  onChange={(e) => {
-                    const rows = Math.max(1, parseInt(e.target.value));
-                    const currentData = element.tableData?.data || [];
-                    const newData = Array(rows)
-                      .fill(null)
-                      .map((_, i) => currentData[i] || Array(element.tableData?.cols || 2).fill(""));
-                    onUpdate({
-                      ...element,
-                      tableData: {
-                        ...element.tableData,
-                        rows,
-                        data: newData,
-                      },
-                    });
-                  }}
-                />
-              </div>
-              <div className="flex-1">
-                <Label>Columns</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={element.tableData?.cols || 2}
-                  onChange={(e) => {
-                    const cols = Math.max(1, parseInt(e.target.value));
-                    const currentData = element.tableData?.data || [];
-                    const newData = currentData.map((row) => {
-                      const newRow = [...row];
-                      while (newRow.length < cols) newRow.push("");
-                      return newRow.slice(0, cols);
-                    });
-                    onUpdate({
-                      ...element,
-                      tableData: {
-                        ...element.tableData,
-                        cols,
-                        data: newData,
-                      },
-                    });
-                  }}
-                />
-              </div>
-            </div>
-            <div>
-              <Label>Headers</Label>
-              <div className="flex gap-2 mt-2">
-                {Array(element.tableData?.cols || 2)
-                  .fill(null)
-                  .map((_, i) => (
-                    <Input
-                      key={i}
-                      value={element.tableData?.headers?.[i] || ""}
-                      onChange={(e) => {
-                        const newHeaders = [...(element.tableData?.headers || [])];
-                        newHeaders[i] = e.target.value;
-                        onUpdate({
-                          ...element,
-                          tableData: {
-                            ...element.tableData,
-                            headers: newHeaders,
-                          },
-                        });
-                      }}
-                      placeholder={`Header ${i + 1}`}
-                    />
-                  ))}
-              </div>
-            </div>
-          </div>
-        );
-
-      case "shape":
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Shape Type</Label>
-              <Select
-                value={element.styles.shapeType || "rectangle"}
-                onValueChange={(value) => updateStyle("shapeType", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="rectangle">Rectangle</SelectItem>
-                  <SelectItem value="circle">Circle</SelectItem>
-                  <SelectItem value="triangle">Triangle</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
-
       default:
         return null;
     }
@@ -372,14 +174,19 @@ export function PropertyPanel({ element, onUpdate, onDelete }: PropertyPanelProp
       </div>
 
       <Tabs defaultValue="content">
-        <TabsList className="grid w-full grid-cols-3 mb-4">
+        <TabsList className="grid w-full grid-cols-4 mb-4">
           <TabsTrigger value="content">Content</TabsTrigger>
+          <TabsTrigger value="data">Data</TabsTrigger>
           <TabsTrigger value="style">Style</TabsTrigger>
           <TabsTrigger value="layout">Layout</TabsTrigger>
         </TabsList>
 
         <TabsContent value="content" className="space-y-4">
           {renderElementSpecificControls()}
+        </TabsContent>
+
+        <TabsContent value="data" className="space-y-4">
+          {renderDataBindingControls()}
         </TabsContent>
 
         <TabsContent value="style" className="space-y-4">
