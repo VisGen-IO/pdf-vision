@@ -54,6 +54,7 @@ export interface Element {
     tableLayout?: string;
     borderCollapse?: string;
     shapeType?: string;
+    objectFit?: "cover" | "contain" | "fill" | "none";
     [key: string]: string | undefined;
   };
   conditions: Array<{

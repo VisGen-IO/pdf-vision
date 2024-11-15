@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Element } from "./types";
+import Image from "next/image";
 
 interface ResizableElementProps {
   element: Element;
@@ -114,11 +115,54 @@ export function ResizableElement({
     onDrop(e, element.id);
   };
 
+  const renderContent = () => {
+    switch (element.type) {
+      case "text":
+        return (
+          <div
+            contentEditable
+            suppressContentEditableWarning
+            className="w-full h-full outline-none"
+            onBlur={(e) =>
+              onUpdate({ ...element, content: e.currentTarget.textContent || "" })
+            }
+            onClick={(e) => e.stopPropagation()}
+          >
+            {element.content}
+          </div>
+        );
+      case "image":
+        return (
+          <img
+            src={element.content}
+            alt="Template element"
+            className="w-full h-full"
+            style={{
+              objectFit: element.styles.objectFit || "cover",
+            }}
+          />
+        );
+      case "container":
+        return (
+          <div className="w-full h-full relative">
+            {element.isRepeatable && (
+              <div className="absolute -top-6 left-0 text-xs bg-primary text-primary-foreground px-2 py-1 rounded">
+                Repeatable: {element.dataSource?.array}
+              </div>
+            )}
+            {children}
+          </div>
+        );
+      default:
+        return element.content;
+    }
+  };
+
   return (
     <div
       ref={elementRef}
       className={`absolute ${isSelected ? "ring-2 ring-primary" : ""} ${
-        element.type === "container" ? "overflow-visible" : ""
+        element.type === "container" ? "overflow-visible" : "overflow-hidden"
       } ${isDragOver ? "ring-2 ring-primary ring-dashed" : ""}`}
       style={{
         left: element.position.x,
@@ -136,23 +180,7 @@ export function ResizableElement({
       onDrop={handleDrop}
       tabIndex={0}
     >
-      {element.type === "text" ? (
-        <div
-          contentEditable
-          suppressContentEditableWarning
-          className="w-full h-full outline-none"
-          onBlur={(e) =>
-            onUpdate({ ...element, content: e.currentTarget.textContent || "" })
-          }
-          onClick={(e) => e.stopPropagation()}
-        >
-          {element.content}
-        </div>
-      ) : element.type === "container" ? (
-        children
-      ) : (
-        element.content
-      )}
+      {renderContent()}
 
       {isSelected && (
         <>

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-// import { Switch } from "@/components/ui/switch";
+import { Switch } from "@/components/ui/switch";
 import { Trash2, Plus, X } from "lucide-react";
 import { Element } from "./types";
 
@@ -40,6 +40,40 @@ export function PropertyPanel({ element, onUpdate, onDelete }: PropertyPanelProp
 
   const renderElementSpecificControls = () => {
     switch (element.type) {
+      case "container":
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={element.isRepeatable}
+                onCheckedChange={(checked) =>
+                  onUpdate({
+                    ...element,
+                    isRepeatable: checked,
+                    dataSource: checked ? { array: "products" } : undefined,
+                  })
+                }
+              />
+              <Label>Repeatable Container</Label>
+            </div>
+            {element.isRepeatable && (
+              <div>
+                <Label>Data Source Array</Label>
+                <Input
+                  value={element.dataSource?.array || ""}
+                  onChange={(e) =>
+                    onUpdate({
+                      ...element,
+                      dataSource: { ...element.dataSource, array: e.target.value },
+                    })
+                  }
+                  placeholder="e.g., products"
+                />
+              </div>
+            )}
+          </div>
+        );
+
       case "text":
       case "dynamic-text":
         return (
