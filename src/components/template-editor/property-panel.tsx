@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { Trash2, Plus, X } from "lucide-react";
 import { Element } from "./types";
 
@@ -39,6 +40,52 @@ export function PropertyPanel({ element, onUpdate, onDelete, availableKeys, json
         [property]: value,
       },
     });
+  };
+
+  const validateAndUpdateCSS = (value: string) => {
+    if (!value.trim()) {
+      onUpdate({ 
+        ...element, 
+        customCSS: "",
+        cssError: "" 
+      });
+      return;
+    }
+
+    try {
+      const cssObj = JSON.parse(value);
+      
+      if (typeof cssObj !== 'object' || Array.isArray(cssObj) || cssObj === null) {
+        onUpdate({
+          ...element,
+          customCSS: value,
+          cssError: "CSS must be a valid object"
+        });
+        return;
+      }
+
+      const invalidProps = Object.entries(cssObj).filter(([_, value]) => typeof value !== 'string');
+      if (invalidProps.length > 0) {
+        onUpdate({
+          ...element,
+          customCSS: value,
+          cssError: `Invalid values for properties: ${invalidProps.map(([key]) => key).join(', ')}`
+        });
+        return;
+      }
+
+      onUpdate({
+        ...element,
+        customCSS: value,
+        cssError: ""
+      });
+    } catch (err) {
+      onUpdate({
+        ...element,
+        customCSS: value,
+        cssError: "Invalid JSON format"
+      });
+    }
   };
 
   const renderDataBindingControls = () => {
@@ -96,11 +143,13 @@ export function PropertyPanel({ element, onUpdate, onDelete, availableKeys, json
         return (
           <div className="space-y-4">
             <div>
-              <Label>Content</Label>
-              <Input
+              <Label>Content (HTML supported)</Label>
+              <Textarea
                 value={element.content}
                 onChange={(e) => onUpdate({ ...element, content: e.target.value })}
-                placeholder="Enter text content"
+                placeholder="Enter HTML content (e.g., Click <a href='#'>here</a> for details)"
+                className="font-mono"
+                rows={5}
               />
             </div>
             {element.type === "dynamic-text" && (
@@ -113,6 +162,22 @@ export function PropertyPanel({ element, onUpdate, onDelete, availableKeys, json
                 />
               </div>
             )}
+            <div>
+              <Label>Custom CSS</Label>
+              <Textarea
+                value={element.customCSS || ""}
+                onChange={(e) => validateAndUpdateCSS(e.target.value)}
+                placeholder={'{\n  "textShadow": "2px 2px 4px rgba(0,0,0,0.5)",\n  "transform": "rotate(45deg)"\n}'}
+                className={`font-mono ${element.cssError ? 'border-red-500' : ''}`}
+                rows={5}
+              />
+              {element.cssError && (
+                <p className="text-xs text-red-500 mt-1">{element.cssError}</p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter CSS properties in JSON format. All values must be strings.
+              </p>
+            </div>
           </div>
         );
 
@@ -151,6 +216,22 @@ export function PropertyPanel({ element, onUpdate, onDelete, availableKeys, json
                   <SelectItem value="none">None</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label>Custom CSS</Label>
+              <Textarea
+                value={element.customCSS || ""}
+                onChange={(e) => validateAndUpdateCSS(e.target.value)}
+                placeholder={'{\n  "filter": "brightness(1.2) contrast(1.1)",\n  "mixBlendMode": "multiply"\n}'}
+                className={`font-mono ${element.cssError ? 'border-red-500' : ''}`}
+                rows={5}
+              />
+              {element.cssError && (
+                <p className="text-xs text-red-500 mt-1">{element.cssError}</p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter CSS properties in JSON format. All values must be strings.
+              </p>
             </div>
           </div>
         );

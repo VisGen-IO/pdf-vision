@@ -77,4 +77,6 @@ export interface Element {
   };
   parentId?: string;
   children?: string[];
+  customCSS?: string;
+  cssError?: string;
 }

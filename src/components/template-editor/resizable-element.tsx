@@ -137,7 +137,7 @@ export function ResizableElement({
             alt="Template element"
             className="w-full h-full"
             style={{
-              objectFit: element.styles.objectFit || "cover",
+              objectFit: element.styles.objectFit as any || "cover",
             }}
           />
         );
@@ -189,21 +189,31 @@ export function ResizableElement({
     }
   };
 
+  let customCSS = {};
+  if (element.customCSS && !element.cssError) {
+    try {
+      customCSS = JSON.parse(element.customCSS);
+    } catch (e) {
+      // Ignore invalid CSS
+    }
+  }
 
+  const combinedStyles:any = {
+    left: element.position.x,
+    top: element.position.y,
+    width: element.size.width,
+    height: element.size.height,
+    cursor: isDragging ? "grabbing" : "grab",
+    ...element.styles,
+    ...customCSS,
+  }
   return (
     <div
       ref={elementRef}
       className={`absolute ${isSelected ? "ring-2 ring-primary" : ""} ${
         element.type === "container" ? "overflow-visible" : ""
       } ${isDragOver ? "ring-2 ring-primary ring-dashed" : ""}`}
-      style={{
-        left: element.position.x,
-        top: element.position.y,
-        width: element.size.width,
-        height: element.size.height,
-        cursor: isDragging ? "grabbing" : "grab",
-        ...element.styles,
-      }}
+      style={combinedStyles}
       onClick={onSelect}
       onMouseDown={handleMouseDown}
       onKeyDown={handleKeyDown}
