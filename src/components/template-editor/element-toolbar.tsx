@@ -19,7 +19,6 @@ import { ElementType } from "./types";
 
 const elements: { type: ElementType; icon: React.ComponentType; label: string }[] = [
   { type: "text", icon: Type, label: "Static Text" },
-  { type: "dynamic-text", icon: Variable, label: "Dynamic Text" },
   { type: "container", icon: Square, label: "Container" },
   { type: "image", icon: ImageIcon, label: "Image" },
   { type: "button", icon: MousePointer2, label: "Button" },
@@ -27,7 +26,6 @@ const elements: { type: ElementType; icon: React.ComponentType; label: string }[
   { type: "divider", icon: SplitSquareVertical, label: "Divider" },
   { type: "list", icon: List, label: "List" },
   { type: "table", icon: Table2, label: "Table" },
-  { type: "shape", icon: Circle, label: "Shape" },
 ];
 
 const elementCategories = [
@@ -62,7 +60,7 @@ export function ElementToolbar() {
             <div className="space-y-2">
               {elements
                 .filter((el) => category.elements.includes(el.type))
-                .map(({ type, icon: Icon, label }) => (
+                .map(({ type, icon: Icon, label }:any) => (
                   <Button
                     key={type}
                     variant="outline"

@@ -114,6 +114,82 @@ export function ResizableElement({
     onDrop(e, element.id);
   };
 
+  const renderContent = () => {
+    switch (element.type) {
+      case "text":
+        return (
+          <p
+            contentEditable
+            suppressContentEditableWarning
+            className="w-full h-full outline-none"
+            onBlur={(e) =>
+              onUpdate({ ...element, content: e.currentTarget.textContent || "" })
+            }
+            onClick={(e) => e.stopPropagation()}
+          >
+            {element.content}
+          </p>
+        );
+      case "image":
+        return (
+          <img
+            src={element.content}
+            alt="Template element"
+            className="w-full h-full"
+            style={{
+              objectFit: element.styles.objectFit || "cover",
+            }}
+          />
+        );
+      case "divider":
+        return <hr className="w-full h-px" style={{ backgroundColor: element.styles.backgroundColor }} />;
+      case "container":
+        return (
+          <div className="w-full h-full relative">
+            {element.isRepeatable && (
+              <div className="absolute -top-6 left-0 text-xs bg-primary text-primary-foreground px-2 py-1 rounded">
+                Repeatable: {element.dataSource?.array}
+              </div>
+            )}
+            {children}
+          </div>
+        );
+      case "list":
+        const ListComponent = element.styles.listStyle === "ordered" ? "ol" : "ul";
+        return (
+          <ListComponent className="w-full h-full list-inside" style={{ listStyleType: element.styles.listStyle }}>
+            {element.listItems?.map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ListComponent>
+        );
+      case "table":
+        return (
+          <table className="w-full h-full border-collapse">
+            <thead>
+              <tr>
+                {element.tableData?.headers.map((header, index) => (
+                  <th key={index} className="border p-2">{header}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {element.tableData?.data.map((row, rowIndex) => (
+                <tr key={rowIndex}>
+                  {row.map((cell, cellIndex) => (
+                    <td key={cellIndex} className="border p-2">{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
+      default:
+        return element.content;
+    }
+  };
+
+
   return (
     <div
       ref={elementRef}
@@ -136,23 +212,7 @@ export function ResizableElement({
       onDrop={handleDrop}
       tabIndex={0}
     >
-      {element.type === "text" ? (
-        <div
-          contentEditable
-          suppressContentEditableWarning
-          className="w-full h-full outline-none"
-          onBlur={(e) =>
-            onUpdate({ ...element, content: e.currentTarget.textContent || "" })
-          }
-          onClick={(e) => e.stopPropagation()}
-        >
-          {element.content}
-        </div>
-      ) : element.type === "container" ? (
-        children
-      ) : (
-        element.content
-      )}
+      {renderContent()}
 
       {isSelected && (
         <>

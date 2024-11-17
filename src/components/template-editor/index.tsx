@@ -310,14 +310,14 @@ export function TemplateEditor() {
           onDelete={deleteElement}
           pageSize={pageSize}
         />
-        <PropertyPanel
+       {selectedElement && <PropertyPanel
           element={selectedElement}
           onUpdate={updateElement}
           onDelete={deleteElement}
           availableKeys={getAvailableKeys(selectedElement?.parentId)}
           jsonData={jsonData}
           isArrayPath={isArrayPath}
-        />
+        />}
       </div>
     </div>
   );
