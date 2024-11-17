@@ -10,7 +10,7 @@ export type ElementType =
   | "table"
   | "shape";
 
-export type PageSize = "A4" | "A3" | "A5" | "Letter";
+export type PageSize = "A4" | "A3" | "A5" | "Letter" | "Custom" | string;
 
 export interface PageDimensions {
   width: number;

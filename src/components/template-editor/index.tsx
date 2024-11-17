@@ -18,6 +18,10 @@ export function TemplateEditor() {
   const [pageSize, setPageSize] = useState<PageSize>("A4");
   const [jsonData, setJsonData] = useState<any>(null);
   const [jsonError, setJsonError] = useState<string>("");
+  const [customDimensions, setCustomDimensions] = useState<{ width: number; height: number }>({
+    width: 800,
+    height: 1000,
+  });
 
   const handleJsonDataChange = (value: string) => {
     try {
@@ -261,7 +265,9 @@ export function TemplateEditor() {
       <div className="p-4 border-b flex justify-between items-center">
         <PageSettings 
           pageSize={pageSize} 
+          customDimensions={customDimensions}
           onPageSizeChange={setPageSize}
+          onCustomDimensionsChange={setCustomDimensions}
         />
         <div className="flex gap-2">
           <Dialog>
@@ -309,6 +315,7 @@ export function TemplateEditor() {
           onUpdate={updateElement}
           onDelete={deleteElement}
           pageSize={pageSize}
+          customDimensions={customDimensions}
         />
        {selectedElement && <PropertyPanel
           element={selectedElement}
