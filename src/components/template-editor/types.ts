@@ -1,16 +1,16 @@
-export type ElementType = 
-  | "text" 
-  | "container" 
-  | "image" 
-  | "dynamic-text"
-  | "button"
-  | "link"
-  | "divider"
-  | "list"
-  | "table"
-  | "shape";
+export type ElementType =
+  | 'text'
+  | 'container'
+  | 'image'
+  | 'dynamic-text'
+  | 'button'
+  | 'link'
+  | 'divider'
+  | 'list'
+  | 'table'
+  | 'shape';
 
-export type PageSize = "A4" | "A3" | "A5" | "Letter" | "Custom" | string;
+export type PageSize = 'A4' | 'A3' | 'A5' | 'Letter' | 'Custom' | string;
 
 export interface PageDimensions {
   width: number;
@@ -20,6 +20,7 @@ export interface PageDimensions {
 export interface DataBinding {
   key?: string;
   arrayPath?: string;
+  itemPrefix?: string;
 }
 
 export interface Element {
@@ -34,12 +35,7 @@ export interface Element {
     height: number;
   };
   content: string;
-  dynamicKey?: string;
   dataBinding?: DataBinding;
-  dataSource?: {
-    array?: string;
-    field?: string;
-  };
   isRepeatable?: boolean;
   styles: {
     backgroundColor: string;
@@ -60,11 +56,16 @@ export interface Element {
     tableLayout?: string;
     borderCollapse?: string;
     shapeType?: string;
+    margin?: string;
+    height?: string;
+    display?: string;
+    flexDirection?: string;
+    gap?: string;
     [key: string]: string | undefined;
   };
   conditions: Array<{
     id: string;
-    type: "show" | "hide";
+    type: 'show' | 'hide';
     expression: string;
   }>;
   href?: string;

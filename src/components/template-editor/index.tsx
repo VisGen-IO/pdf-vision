@@ -1,24 +1,39 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { ElementToolbar } from "./element-toolbar";
-import { Canvas } from "./canvas";
-import { PropertyPanel } from "./property-panel";
-import { PageSettings } from "./page-settings";
-import { ElementType, Element, PageSize } from "./types";
-import { nanoid } from "./utils";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useState } from 'react';
+import { ElementToolbar } from './element-toolbar';
+import { Canvas } from './canvas';
+import { PropertyPanel } from './property-panel';
+import { PageSettings } from './page-settings';
+import { HTMLUpload } from './html-upload';
+import { ElementType, Element, PageSize } from './types';
+import { nanoid } from './utils';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export function TemplateEditor() {
   const [elements, setElements] = useState<Element[]>([]);
   const [selectedElement, setSelectedElement] = useState<Element | null>(null);
-  const [pageSize, setPageSize] = useState<PageSize>("A4");
+  const [pageSize, setPageSize] = useState<PageSize>('A4');
   const [jsonData, setJsonData] = useState<any>(null);
-  const [jsonError, setJsonError] = useState<string>("");
-  const [customDimensions, setCustomDimensions] = useState<{ width: number; height: number }>({
+  const [jsonError, setJsonError] = useState<string>('');
+  const [customDimensions, setCustomDimensions] = useState<{
+    width: number;
+    height: number;
+  }>({
     width: 800,
     height: 1000,
   });
@@ -27,42 +42,51 @@ export function TemplateEditor() {
     try {
       const parsed = JSON.parse(value);
       setJsonData(parsed);
-      setJsonError("");
+      setJsonError('');
     } catch (e) {
-      setJsonError("Invalid JSON format");
+      setJsonError('Invalid JSON format');
     }
   };
 
-  const getLeafAndArrayPaths = (obj: any, parentPath = ""): string[] => {
-    const paths: string[] = [];
+  const getLeafAndArrayPaths = (obj: any, parentPath = '', isRoot = true): string[] => {
+    if (!obj || typeof obj !== 'object') return [];
     
-    for (const key in obj) {
-      const currentPath = parentPath ? `${parentPath}.${key}` : key;
-      const value = obj[key];
-      
-      if (Array.isArray(value)) {
-        paths.push(currentPath);
-      } else if (typeof value === "object" && value !== null) {
-        paths.push(...getLeafAndArrayPaths(value, currentPath));
-      } else {
-        paths.push(currentPath);
-      }
+    // If we're at the root level, only return first-level keys
+    if (isRoot) {
+      return Object.keys(obj);
     }
-    
+
+    const paths: string[] = [];
+    const processObject = (obj: any, currentPath: string) => {
+      for (const key in obj) {
+        const newPath = currentPath ? `${currentPath}.${key}` : key;
+        const value = obj[key];
+
+        if (Array.isArray(value)) {
+          paths.push(newPath);
+        } else if (typeof value === 'object' && value !== null) {
+          processObject(value, newPath);
+        } else {
+          paths.push(newPath);
+        }
+      }
+    };
+
+    processObject(obj, parentPath);
     return paths;
   };
 
   const getAvailableKeys = (parentId?: string): string[] => {
     if (!jsonData) return [];
 
-    const parent = elements.find(el => el.id === parentId);
-    if (!parent?.dataBinding?.key) {
+    const parent = elements.find((el) => el.id === parentId);
+    if (!parent?.dataBinding?.arrayPath) {
       return getLeafAndArrayPaths(jsonData);
     }
 
-    const parentValue = getValueFromPath(jsonData, parent.dataBinding.key);
+    const parentValue = getValueFromPath(jsonData, parent.dataBinding.arrayPath);
     if (Array.isArray(parentValue) && parentValue.length > 0) {
-      return Object.keys(parentValue[0]);
+      return getLeafAndArrayPaths(parentValue[0], '', false);
     }
 
     return [];
@@ -74,39 +98,74 @@ export function TemplateEditor() {
   };
 
   const getValueFromPath = (obj: any, path: string): any => {
-    return path.split('.').reduce((acc, part) => acc?.[part], obj);
+    return path.split('.').reduce((acc, part) => {
+      if (part.endsWith(']')) {
+        const [arrayName, index] = part.split('[');
+        return acc?.[arrayName]?.[parseInt(index)];
+      }
+      return acc?.[part];
+    }, obj);
   };
 
   const generateHTML = () => {
-    const resolveValue = (element: Element, data: any) => {
-      if (!element.dataBinding?.key) return element.content;
-      return getValueFromPath(data, element.dataBinding.key) || element.content;
-    };
-
-    const generateElementHTML = (element: Element, data: any = jsonData): string => {
+    const generateElementHTML = (element: Element, itemPrefix = ''): string => {
       let html = '';
+      const styles = generateStyles(element.styles);
+      let customStyles = '';
       
-      if (element.isRepeatable && element.dataBinding?.arrayPath) {
-        const arrayData = getValueFromPath(data, element.dataBinding.arrayPath);
-        if (Array.isArray(arrayData)) {
-          return arrayData.map(item => generateElementHTML({ ...element, isRepeatable: false }, item)).join('\n');
+      if (element.customCSS) {
+        try {
+          const cssObj = JSON.parse(element.customCSS);
+          customStyles = Object.entries(cssObj)
+            .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
+            .join('; ');
+        } catch (e) {
+          // Ignore invalid CSS
         }
       }
 
+      const combinedStyles = `${styles}${customStyles ? '; ' + customStyles : ''}`;
+
+      if (element.isRepeatable && element.dataBinding?.arrayPath) {
+        const arrayPath = element.dataBinding.arrayPath;
+        const itemAlias = `${element?.dataBinding?.itemAlias || element?.dataBinding?.arrayPath}_item`|| arrayPath.split('.').pop() || 'item';
+        html = `{% for ${itemAlias} in ${arrayPath} %}\n`;
+        
+        const childElements = elements.filter((el) => el.parentId === element.id);
+        const containerHTML = `<div style="${combinedStyles}">${
+          childElements
+            .map((child) => generateElementHTML(child, `${itemAlias}.`))
+            .join('\n')
+        }</div>`;
+        
+        html += containerHTML;
+        html += `\n{% endfor %}`;
+        return html;
+      }
+
       switch (element.type) {
-        case "container":
-          const childElements = elements.filter(el => el.parentId === element.id);
-          const childrenHTML = childElements.map(child => generateElementHTML(child, data)).join('\n');
-          html = `<div style="${generateStyles(element.styles)}">${childrenHTML}</div>`;
+        case 'container':
+          const childElements = elements.filter((el) => el.parentId === element.id);
+          html = `<div style="${combinedStyles}">${
+            childElements
+              .map((child) => generateElementHTML(child, itemPrefix))
+              .join('\n')
+          }</div>`;
           break;
-        case "text":
-        case "dynamic-text":
-          const content = resolveValue(element, data);
-          html = `<div style="${generateStyles(element.styles)}">${content}</div>`;
+
+        case 'text':
+          const content = element.dataBinding?.key
+            ? `{{${itemPrefix}${element.dataBinding.key}}}`
+            : element.content;
+          html = `<p style="${combinedStyles}">${content}</p>`;
           break;
-        case "image":
-          const imageUrl = resolveValue(element, data);
-          html = `<img src="${imageUrl}" alt="${element.styles.alt || ''}" style="${generateStyles(element.styles)}"/>`;
+
+        case 'image':
+          html = `<img src="${element.content}" alt="${element.styles.alt || ''}" style="${combinedStyles}"/>`;
+          break;
+
+        default:
+          html = `<div style="${combinedStyles}">${element.content}</div>`;
           break;
       }
 
@@ -115,15 +174,17 @@ export function TemplateEditor() {
 
     const generateStyles = (styles: Element['styles']): string => {
       return Object.entries(styles)
+        .filter(([_, value]) => value !== undefined && value !== '')
         .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
         .join('; ');
     };
 
-    const rootElements = elements.filter(element => !element.parentId);
-    const bodyContent = rootElements.map(element => generateElementHTML(element)).join('\n');
+    const rootElements = elements.filter((element) => !element.parentId);
+    const bodyContent = rootElements
+      .map((element) => generateElementHTML(element))
+      .join('\n');
 
-    const html = `
-<!DOCTYPE html>
+    const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -155,41 +216,29 @@ export function TemplateEditor() {
       id: nanoid(),
       type,
       position,
-      size: { width: 200, height: type === "text" || type === "dynamic-text" ? 40 : 200 },
-      content: type === "dynamic-text" ? "{{variable}}" : type === "text" ? "Edit this text" : "",
-      dynamicKey: type === "dynamic-text" ? "variable" : undefined,
-      dataSource: undefined,
-      isRepeatable: type === "container" ? false : undefined,
+      size: {
+        width: type === 'text' ? 300 : 200,
+        height: type === 'text' ? 40 : 200,
+      },
+      content: type === 'text' ? 'Edit this text' : '',
       styles: {
-        backgroundColor: type === "container" ? "#ffffff" : "transparent",
-        color: "#000000",
-        padding: "1rem",
-        borderRadius: "0.5rem",
-        border: type === "container" ? "1px solid #e2e8f0" : "none",
-        fontSize: "14px",
-        fontWeight: "normal",
+        backgroundColor: type === 'container' ? '#ffffff' : 'transparent',
+        color: '#515151',
+        padding: '0',
+        borderRadius: '0',
+        border: type === 'container' ? '1px solid #e2e8f0' : 'none',
+        fontSize: '12px',
+        fontWeight: 'normal',
+        margin: '0',
+        display: type === 'container' ? 'flex' : undefined,
+        flexDirection: type === 'container' ? 'column' : undefined,
+        gap: type === 'container' ? '4px' : undefined,
       },
       conditions: [],
       parentId,
-      children: type === "container" ? [] : undefined,
     };
 
-    setElements((prev) => {
-      const updatedElements = [...prev, newElement];
-      if (parentId) {
-        const parentElement = prev.find((el) => el.id === parentId);
-        if (parentElement) {
-          const updatedParent = {
-            ...parentElement,
-            children: [...(parentElement.children || []), newElement.id],
-          };
-          return updatedElements.map((el) =>
-            el.id === parentId ? updatedParent : el
-          );
-        }
-      }
-      return updatedElements;
-    });
+    setElements((prev) => [...prev, newElement]);
     setSelectedElement(newElement);
   };
 
@@ -201,74 +250,22 @@ export function TemplateEditor() {
   };
 
   const deleteElement = (id: string) => {
-    setElements((prev) => {
-      const elementToDelete = prev.find((el) => el.id === id);
-      if (!elementToDelete) return prev;
-
-      const idsToRemove = new Set<string>([id]);
-      const addChildrenIds = (parentId: string) => {
-        prev.forEach((el) => {
-          if (el.parentId === parentId) {
-            idsToRemove.add(el.id);
-            addChildrenIds(el.id);
-          }
-        });
-      };
-      addChildrenIds(id);
-
-      return prev
-        .filter((el) => !idsToRemove.has(el.id))
-        .map((el) => {
-          if (el.children?.includes(id)) {
-            return {
-              ...el,
-              children: el.children.filter((childId) => childId !== id),
-            };
-          }
-          return el;
-        });
-    });
+    setElements((prev) => prev.filter((el) => el.id !== id));
     setSelectedElement(null);
-  };
-
-  const exportTemplate = () => {
-    const template = {
-      elements: elements.map(({ id, type, position, size, content, dynamicKey, dataSource, isRepeatable, styles, conditions, dataBinding }) => ({
-        id,
-        type,
-        position,
-        size,
-        content,
-        dynamicKey,
-        dataSource,
-        isRepeatable,
-        styles,
-        conditions,
-        dataBinding,
-      })),
-      pageSize,
-    };
-    
-    const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'template.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   return (
     <div className="flex flex-col h-screen">
       <div className="p-4 border-b flex justify-between items-center">
-        <PageSettings 
-          pageSize={pageSize} 
-          customDimensions={customDimensions}
-          onPageSizeChange={setPageSize}
-          onCustomDimensionsChange={setCustomDimensions}
-        />
+        <div className="flex items-center gap-4">
+          <PageSettings
+            pageSize={pageSize}
+            customDimensions={customDimensions}
+            onPageSizeChange={setPageSize}
+            onCustomDimensionsChange={setCustomDimensions}
+          />
+          <HTMLUpload onTemplateGenerated={setElements} />
+        </div>
         <div className="flex gap-2">
           <Dialog>
             <DialogTrigger asChild>
@@ -295,9 +292,6 @@ export function TemplateEditor() {
               <Button>Export</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={exportTemplate}>
-                Export Template (JSON)
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={generateHTML}>
                 Export HTML
               </DropdownMenuItem>
@@ -317,14 +311,14 @@ export function TemplateEditor() {
           pageSize={pageSize}
           customDimensions={customDimensions}
         />
-       {selectedElement && <PropertyPanel
+        <PropertyPanel
           element={selectedElement}
           onUpdate={updateElement}
           onDelete={deleteElement}
           availableKeys={getAvailableKeys(selectedElement?.parentId)}
           jsonData={jsonData}
           isArrayPath={isArrayPath}
-        />}
+        />
       </div>
     </div>
   );

@@ -1,18 +1,20 @@
-"use client";
+'use client';
 
-import { useRef } from "react";
-import { Element, PageSize } from "./types";
-import { ResizableElement } from "./resizable-element";
-import { Card } from "@/components/ui/card";
+import { useRef } from 'react';
+import { Element, PageSize } from './types';
+import { ResizableElement } from './resizable-element';
+import { Card } from '@/components/ui/card';
 
-const PAGE_SIZES: Record<Exclude<PageSize, "Custom">, { width: number; height: number }> = {
-  "A4": { width: 794, height: 1123 },
-  "A3": { width: 1123, height: 1587 },
-  "A5": { width: 559, height: 794 },
-  "Letter": { width: 816, height: 1056 },
-  "Custom": { width: 800, height: 1000 },
+const PAGE_SIZES: Record<
+  Exclude<PageSize, 'Custom'>,
+  { width: number; height: number }
+> = {
+  A4: { width: 794, height: 1123 },
+  A3: { width: 1123, height: 1587 },
+  A5: { width: 559, height: 794 },
+  Letter: { width: 816, height: 1056 },
+  Custom: { width: 800, height: 1000 },
 };
-
 
 interface CanvasProps {
   elements: Element[];
@@ -20,7 +22,11 @@ interface CanvasProps {
   pageSize: PageSize;
   customDimensions?: { width: number; height: number };
   onSelect: (element: Element | null) => void;
-  onDrop: (type: Element["type"], position: { x: number; y: number }, parentId?: string) => void;
+  onDrop: (
+    type: Element['type'],
+    position: { x: number; y: number },
+    parentId?: string
+  ) => void;
   onUpdate: (element: Element) => void;
   onDelete: (id: string) => void;
 }
@@ -43,7 +49,7 @@ export function Canvas({
 
   const handleDrop = (e: React.DragEvent, parentId?: string) => {
     e.preventDefault();
-    const type = e.dataTransfer.getData("elementType") as Element["type"];
+    const type = e.dataTransfer.getData('elementType') as Element['type'];
     if (!type || !canvasRef.current) return;
 
     const rect = parentId
@@ -80,9 +86,10 @@ export function Canvas({
   };
 
   const rootElements = elements.filter((element) => !element.parentId);
-  const pageDimensions = pageSize === "Custom" 
-  ? customDimensions 
-  : PAGE_SIZES[pageSize as Exclude<PageSize, "Custom">];
+  const pageDimensions =
+    pageSize === 'Custom'
+      ? customDimensions
+      : PAGE_SIZES[pageSize as Exclude<PageSize, 'Custom'>];
 
   return (
     <div className="flex-1 overflow-auto bg-neutral-100 p-8">

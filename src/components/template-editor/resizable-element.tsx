@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useRef, useState } from "react";
-import { Element } from "./types";
+import { useRef, useState } from 'react';
+import { Element } from './types';
 
 interface ResizableElementProps {
   element: Element;
@@ -46,12 +46,12 @@ export function ResizableElement({
 
     const handleMouseUp = () => {
       setIsDragging(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
     };
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const handleResizeMouseDown = (e: React.MouseEvent, direction: string) => {
@@ -68,8 +68,14 @@ export function ResizableElement({
       const deltaY = e.clientY - startY;
 
       const newSize = {
-        width: Math.max(100, startWidth + (direction.includes("e") ? deltaX : 0)),
-        height: Math.max(100, startHeight + (direction.includes("s") ? deltaY : 0)),
+        width: Math.max(
+          100,
+          startWidth + (direction.includes('e') ? deltaX : 0)
+        ),
+        height: Math.max(
+          100,
+          startHeight + (direction.includes('s') ? deltaY : 0)
+        ),
       };
 
       onUpdate({
@@ -80,22 +86,22 @@ export function ResizableElement({
 
     const handleMouseUp = () => {
       setIsResizing(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
     };
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Delete" || e.key === "Backspace") {
+    if (e.key === 'Delete' || e.key === 'Backspace') {
       onDelete(element.id);
     }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
-    if (element.type === "container") {
+    if (element.type === 'container') {
       e.preventDefault();
       e.stopPropagation();
       setIsDragOver(true);
@@ -107,7 +113,7 @@ export function ResizableElement({
   };
 
   const handleDrop = (e: React.DragEvent) => {
-    if (element.type !== "container") return;
+    if (element.type !== 'container') return;
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(false);
@@ -116,34 +122,42 @@ export function ResizableElement({
 
   const renderContent = () => {
     switch (element.type) {
-      case "text":
+      case 'text':
         return (
           <p
             contentEditable
             suppressContentEditableWarning
             className="w-full h-full outline-none"
             onBlur={(e) =>
-              onUpdate({ ...element, content: e.currentTarget.textContent || "" })
+              onUpdate({
+                ...element,
+                content: e.currentTarget.textContent || '',
+              })
             }
             onClick={(e) => e.stopPropagation()}
           >
             {element.content}
           </p>
         );
-      case "image":
+      case 'image':
         return (
           <img
             src={element.content}
             alt="Template element"
             className="w-full h-full"
             style={{
-              objectFit: element.styles.objectFit as any || "cover",
+              objectFit: (element.styles.objectFit as any) || 'cover',
             }}
           />
         );
-      case "divider":
-        return <hr className="w-full h-px" style={{ backgroundColor: element.styles.backgroundColor }} />;
-      case "container":
+      case 'divider':
+        return (
+          <hr
+            className="w-full h-px"
+            style={{ backgroundColor: element.styles.backgroundColor }}
+          />
+        );
+      case 'container':
         return (
           <div className="w-full h-full relative">
             {element.isRepeatable && (
@@ -154,22 +168,28 @@ export function ResizableElement({
             {children}
           </div>
         );
-      case "list":
-        const ListComponent = element.styles.listStyle === "ordered" ? "ol" : "ul";
+      case 'list':
+        const ListComponent =
+          element.styles.listStyle === 'ordered' ? 'ol' : 'ul';
         return (
-          <ListComponent className="w-full h-full list-inside" style={{ listStyleType: element.styles.listStyle }}>
+          <ListComponent
+            className="w-full h-full list-inside"
+            style={{ listStyleType: element.styles.listStyle }}
+          >
             {element.listItems?.map((item, index) => (
               <li key={index}>{item}</li>
             ))}
           </ListComponent>
         );
-      case "table":
+      case 'table':
         return (
           <table className="w-full h-full border-collapse">
             <thead>
               <tr>
                 {element.tableData?.headers.map((header, index) => (
-                  <th key={index} className="border p-2">{header}</th>
+                  <th key={index} className="border p-2">
+                    {header}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -177,7 +197,9 @@ export function ResizableElement({
               {element.tableData?.data.map((row, rowIndex) => (
                 <tr key={rowIndex}>
                   {row.map((cell, cellIndex) => (
-                    <td key={cellIndex} className="border p-2">{cell}</td>
+                    <td key={cellIndex} className="border p-2">
+                      {cell}
+                    </td>
                   ))}
                 </tr>
               ))}
@@ -198,21 +220,21 @@ export function ResizableElement({
     }
   }
 
-  const combinedStyles:any = {
+  const combinedStyles: any = {
     left: element.position.x,
     top: element.position.y,
     width: element.size.width,
     height: element.size.height,
-    cursor: isDragging ? "grabbing" : "grab",
+    cursor: isDragging ? 'grabbing' : 'grab',
     ...element.styles,
     ...customCSS,
-  }
+  };
   return (
     <div
       ref={elementRef}
-      className={`absolute ${isSelected ? "ring-2 ring-primary" : ""} ${
-        element.type === "container" ? "overflow-visible" : ""
-      } ${isDragOver ? "ring-2 ring-primary ring-dashed" : ""}`}
+      className={`absolute ${isSelected ? 'ring-2 ring-primary' : ''} ${
+        element.type === 'container' ? 'overflow-visible' : ''
+      } ${isDragOver ? 'ring-2 ring-primary ring-dashed' : ''}`}
       style={combinedStyles}
       onClick={onSelect}
       onMouseDown={handleMouseDown}
@@ -228,15 +250,15 @@ export function ResizableElement({
         <>
           <div
             className="absolute -right-1 -bottom-1 w-3 h-3 bg-primary cursor-se-resize"
-            onMouseDown={(e) => handleResizeMouseDown(e, "se")}
+            onMouseDown={(e) => handleResizeMouseDown(e, 'se')}
           />
           <div
             className="absolute -right-1 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary cursor-e-resize"
-            onMouseDown={(e) => handleResizeMouseDown(e, "e")}
+            onMouseDown={(e) => handleResizeMouseDown(e, 'e')}
           />
           <div
             className="absolute right-1/2 -bottom-1 translate-x-1/2 w-3 h-3 bg-primary cursor-s-resize"
-            onMouseDown={(e) => handleResizeMouseDown(e, "s")}
+            onMouseDown={(e) => handleResizeMouseDown(e, 's')}
           />
         </>
       )}
