@@ -256,7 +256,7 @@ export function TemplateEditor() {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="p-4 border-b flex justify-between items-center">
+      <div className="p-4 border-b flex justify-between items-center  bg-white shadow-sm">
         <div className="flex items-center gap-4">
           <PageSettings
             pageSize={pageSize}

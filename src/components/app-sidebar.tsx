@@ -1,5 +1,5 @@
-import { Calendar, Files, Home, Inbox, Search, Settings } from "lucide-react"
-
+import { Files, Home, Settings } from "lucide-react"
+import { FilePenLine } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +23,11 @@ const items = [
     title: "PDF templates",
     url: "/pdf-templates",
     icon: Files,
+  },
+  {
+    title: "Editor",
+    url: "/editor",
+    icon: FilePenLine, 
   },
 
 ]
