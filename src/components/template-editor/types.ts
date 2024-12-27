@@ -18,6 +18,7 @@ export interface PageDimensions {
 }
 
 export interface DataBinding {
+  itemAlias: string;
   key?: string;
   arrayPath?: string;
   itemPrefix?: string;
