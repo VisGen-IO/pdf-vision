@@ -26,6 +26,7 @@ export interface DataBinding {
 
 export interface Element {
   id: string;
+  dataSource?: any;
   type: ElementType;
   position: {
     x: number;
@@ -36,7 +37,7 @@ export interface Element {
     height: number;
   };
   content: string;
-  dataBinding?: DataBinding;
+  dataBinding?: DataBinding | any;
   isRepeatable?: boolean;
   styles: {
     backgroundColor: string;

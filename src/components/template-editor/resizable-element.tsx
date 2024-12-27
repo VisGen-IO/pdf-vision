@@ -162,7 +162,7 @@ export function ResizableElement({
           <div className="w-full h-full relative">
             {element.isRepeatable && (
               <div className="absolute -top-6 left-0 text-xs bg-primary text-primary-foreground px-2 py-1 rounded">
-                Repeatable: {element.dataSource?.array}
+                Repeatable: {element?.dataSource?.array}
               </div>
             )}
             {children}
