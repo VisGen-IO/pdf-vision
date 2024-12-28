@@ -256,7 +256,7 @@ export function TemplateEditor() {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="p-4 border-b flex justify-between items-center  bg-white shadow-sm">
+      <div className="w-full p-4 border-b flex justify-between items-center  bg-white shadow-sm">
         <div className="flex items-center gap-4">
           <PageSettings
             pageSize={pageSize}
@@ -266,7 +266,7 @@ export function TemplateEditor() {
           />
           <HTMLUpload onTemplateGenerated={setElements} />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 mr-4">
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline">Load JSON Data</Button>
@@ -311,14 +311,14 @@ export function TemplateEditor() {
           pageSize={pageSize}
           customDimensions={customDimensions}
         />
-        <PropertyPanel
+        {selectedElement && <PropertyPanel
           element={selectedElement}
           onUpdate={updateElement}
           onDelete={deleteElement}
           availableKeys={getAvailableKeys(selectedElement?.parentId)}
           jsonData={jsonData}
           isArrayPath={isArrayPath}
-        />
+        />}
       </div>
     </div>
   );
