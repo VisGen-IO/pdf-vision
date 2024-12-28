@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -6,7 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Trash2 } from "lucide-react";
@@ -21,13 +27,13 @@ interface PropertyPanelProps {
   isArrayPath: (path: string) => boolean;
 }
 
-export function PropertyPanel({ 
-  element, 
-  onUpdate, 
-  onDelete, 
+export function PropertyPanel({
+  element,
+  onUpdate,
+  onDelete,
   availableKeys,
   jsonData,
-  isArrayPath
+  isArrayPath,
 }: PropertyPanelProps) {
   if (!element) {
     return (
@@ -52,23 +58,44 @@ export function PropertyPanel({
   const renderDataBindingControls = () => {
     if (!jsonData) return null;
 
+    const handleDataKeyChange = (value: string) => {
+      const isArray = isArrayPath(value);
+      const defaultAlias = value.split(".").pop() || "item";
+
+      onUpdate({
+        ...element,
+        dataBinding: {
+          key: isArray ? undefined : value,
+          arrayPath: isArray ? value : undefined,
+          itemAlias: isArray ? defaultAlias : undefined,
+        },
+        isRepeatable: isArray && element.type === "container",
+      });
+    };
+
+    const handleRepeatableChange = (checked: boolean) => {
+      const arrayPath = element.dataBinding?.arrayPath;
+      const defaultAlias = arrayPath?.split(".").pop() || "item";
+
+      onUpdate({
+        ...element,
+        isRepeatable: checked,
+        dataBinding: {
+          ...element.dataBinding,
+          itemAlias: checked ? defaultAlias : undefined,
+        },
+      });
+    };
+
     return (
       <div className="space-y-4">
         <div>
           <Label>Data Key</Label>
           <Select
-            value={element.dataBinding?.key || ""}
-            onValueChange={(value) => {
-              const isArray = isArrayPath(value);
-              onUpdate({
-                ...element,
-                dataBinding: {
-                  key: isArray ? undefined : value,
-                  arrayPath: isArray ? value : undefined,
-                },
-                isRepeatable: isArray && element.type === "container"
-              });
-            }}
+            value={
+              element.dataBinding?.key || element.dataBinding?.arrayPath || ""
+            }
+            onValueChange={handleDataKeyChange}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select data key" />
@@ -82,22 +109,46 @@ export function PropertyPanel({
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground mt-1">
-            {element.dataBinding?.arrayPath 
-              ? "Selected key is an array. Enable 'Repeat for each item' to iterate." 
+            {element.dataBinding?.arrayPath
+              ? "Selected key is an array. Enable 'Repeat for each item' to iterate."
               : "Selected key will be used as placeholder in format: {{key}}"}
           </p>
         </div>
 
-        {element.type === "container" && element.dataBinding?.arrayPath && (
-          <div className="flex items-center space-x-2">
-            <Switch
-              checked={element.isRepeatable}
-              onCheckedChange={(checked) =>
-                onUpdate({ ...element, isRepeatable: checked })
-              }
-            />
-            <Label>Repeat for each item</Label>
-          </div>
+        {element?.type === "container" && element?.dataBinding?.arrayPath && (
+          <>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={element?.isRepeatable}
+                onCheckedChange={handleRepeatableChange}
+              />
+              <Label>Repeat for each item</Label>
+            </div>
+
+            {element?.isRepeatable && (
+              <div>
+                <Label>Item Variable Name</Label>
+                <Input
+                  value={element.dataBinding.itemAlias || ""}
+                  onChange={(e) =>
+                    onUpdate({
+                      ...element,
+                      dataBinding: {
+                        ...element.dataBinding,
+                        itemAlias: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="Enter variable name"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {
+                    "This will be used as the variable name in the loop (e.g., {% for {name} in array %})"
+                  }
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     );
@@ -112,7 +163,9 @@ export function PropertyPanel({
               <Label>Content</Label>
               <Textarea
                 value={element.content}
-                onChange={(e) => onUpdate({ ...element, content: e.target.value })}
+                onChange={(e) =>
+                  onUpdate({ ...element, content: e.target.value })
+                }
                 placeholder="Enter content or select a data key"
                 className="font-mono"
                 rows={5}
@@ -123,16 +176,23 @@ export function PropertyPanel({
               <Textarea
                 value={element.customCSS || ""}
                 onChange={(e) => {
-                  const updatedElement = { ...element, customCSS: e.target.value };
+                  const updatedElement = {
+                    ...element,
+                    customCSS: e.target.value,
+                  };
                   try {
                     if (e.target.value) {
                       const cssObj = JSON.parse(e.target.value);
-                      if (typeof cssObj !== 'object' || Array.isArray(cssObj)) {
+                      if (typeof cssObj !== "object" || Array.isArray(cssObj)) {
                         updatedElement.cssError = "CSS must be a valid object";
                       } else {
-                        const invalidProps = Object.entries(cssObj).filter(([_, value]) => typeof value !== 'string');
+                        const invalidProps = Object.entries(cssObj).filter(
+                          ([_, value]) => typeof value !== "string"
+                        );
                         if (invalidProps.length > 0) {
-                          updatedElement.cssError = `Invalid values for properties: ${invalidProps.map(([key]) => key).join(', ')}`;
+                          updatedElement.cssError = `Invalid values for properties: ${invalidProps
+                            .map(([key]) => key)
+                            .join(", ")}`;
                         } else {
                           updatedElement.cssError = "";
                         }
@@ -145,8 +205,12 @@ export function PropertyPanel({
                   }
                   onUpdate(updatedElement);
                 }}
-                placeholder={'{\n  "margin": "0",\n  "color": "#515151",\n  "height": "16px"\n}'}
-                className={`font-mono ${element.cssError ? 'border-red-500' : ''}`}
+                placeholder={
+                  '{\n  "margin": "0",\n  "color": "#515151",\n  "height": "16px"\n}'
+                }
+                className={`font-mono ${
+                  element.cssError ? "border-red-500" : ""
+                }`}
                 rows={5}
               />
               {element.cssError && (
@@ -163,7 +227,9 @@ export function PropertyPanel({
               <Label>Image URL</Label>
               <Input
                 value={element.content}
-                onChange={(e) => onUpdate({ ...element, content: e.target.value })}
+                onChange={(e) =>
+                  onUpdate({ ...element, content: e.target.value })
+                }
                 placeholder="Enter image URL"
               />
             </div>

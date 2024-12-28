@@ -1,35 +1,35 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ElementToolbar } from './element-toolbar';
-import { Canvas } from './canvas';
-import { PropertyPanel } from './property-panel';
-import { PageSettings } from './page-settings';
-import { HTMLUpload } from './html-upload';
-import { ElementType, Element, PageSize } from './types';
-import { nanoid } from './utils';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { useState } from "react";
+import { ElementToolbar } from "./element-toolbar";
+import { Canvas } from "./canvas";
+import { PropertyPanel } from "./property-panel";
+import { PageSettings } from "./page-settings";
+import { HTMLUpload } from "./html-upload";
+import { ElementType, Element, PageSize } from "./types";
+import { nanoid } from "./utils";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 
 export function TemplateEditor() {
   const [elements, setElements] = useState<Element[]>([]);
   const [selectedElement, setSelectedElement] = useState<Element | null>(null);
-  const [pageSize, setPageSize] = useState<PageSize>('A4');
+  const [pageSize, setPageSize] = useState<PageSize>("A4");
   const [jsonData, setJsonData] = useState<any>(null);
-  const [jsonError, setJsonError] = useState<string>('');
+  const [jsonError, setJsonError] = useState<string>("");
   const [customDimensions, setCustomDimensions] = useState<{
     width: number;
     height: number;
@@ -42,15 +42,19 @@ export function TemplateEditor() {
     try {
       const parsed = JSON.parse(value);
       setJsonData(parsed);
-      setJsonError('');
+      setJsonError("");
     } catch (e) {
-      setJsonError('Invalid JSON format');
+      setJsonError("Invalid JSON format");
     }
   };
 
-  const getLeafAndArrayPaths = (obj: any, parentPath = '', isRoot = true): string[] => {
-    if (!obj || typeof obj !== 'object') return [];
-    
+  const getLeafAndArrayPaths = (
+    obj: any,
+    parentPath = "",
+    isRoot = true
+  ): string[] => {
+    if (!obj || typeof obj !== "object") return [];
+
     // If we're at the root level, only return first-level keys
     if (isRoot) {
       return Object.keys(obj);
@@ -64,7 +68,7 @@ export function TemplateEditor() {
 
         if (Array.isArray(value)) {
           paths.push(newPath);
-        } else if (typeof value === 'object' && value !== null) {
+        } else if (typeof value === "object" && value !== null) {
           processObject(value, newPath);
         } else {
           paths.push(newPath);
@@ -84,9 +88,12 @@ export function TemplateEditor() {
       return getLeafAndArrayPaths(jsonData);
     }
 
-    const parentValue = getValueFromPath(jsonData, parent.dataBinding.arrayPath);
+    const parentValue = getValueFromPath(
+      jsonData,
+      parent.dataBinding.arrayPath
+    );
     if (Array.isArray(parentValue) && parentValue.length > 0) {
-      return getLeafAndArrayPaths(parentValue[0], '', false);
+      return getLeafAndArrayPaths(parentValue[0], "", false);
     }
 
     return [];
@@ -98,9 +105,9 @@ export function TemplateEditor() {
   };
 
   const getValueFromPath = (obj: any, path: string): any => {
-    return path.split('.').reduce((acc, part) => {
-      if (part.endsWith(']')) {
-        const [arrayName, index] = part.split('[');
+    return path.split(".").reduce((acc, part) => {
+      if (part.endsWith("]")) {
+        const [arrayName, index] = part.split("[");
         return acc?.[arrayName]?.[parseInt(index)];
       }
       return acc?.[part];
@@ -108,60 +115,72 @@ export function TemplateEditor() {
   };
 
   const generateHTML = () => {
-    const generateElementHTML = (element: Element, itemPrefix = ''): string => {
-      let html = '';
+    const generateElementHTML = (element: Element, itemPrefix = ""): string => {
+      let html = "";
       const styles = generateStyles(element.styles);
-      let customStyles = '';
-      
+      let customStyles = "";
+
       if (element.customCSS) {
         try {
           const cssObj = JSON.parse(element.customCSS);
           customStyles = Object.entries(cssObj)
-            .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
-            .join('; ');
+            .map(
+              ([key, value]) =>
+                `${key.replace(/([A-Z])/g, "-$1").toLowerCase()}: ${value}`
+            )
+            .join("; ");
         } catch (e) {
           // Ignore invalid CSS
         }
       }
 
-      const combinedStyles = `${styles}${customStyles ? '; ' + customStyles : ''}`;
+      const combinedStyles = `${styles}${
+        customStyles ? "; " + customStyles : ""
+      }`;
 
       if (element.isRepeatable && element.dataBinding?.arrayPath) {
         const arrayPath = element.dataBinding.arrayPath;
-        const itemAlias = `${element?.dataBinding?.itemAlias || element?.dataBinding?.arrayPath}_item`|| arrayPath.split('.').pop() || 'item';
+        const itemAlias =
+          `${
+            element?.dataBinding?.itemAlias || element?.dataBinding?.arrayPath
+          }` ||
+          arrayPath.split(".").pop() ||
+          "item";
         html = `{% for ${itemAlias} in ${arrayPath} %}\n`;
-        
-        const childElements = elements.filter((el) => el.parentId === element.id);
-        const containerHTML = `<div style="${combinedStyles}">${
-          childElements
-            .map((child) => generateElementHTML(child, `${itemAlias}.`))
-            .join('\n')
-        }</div>`;
-        
+
+        const childElements = elements.filter(
+          (el) => el.parentId === element.id
+        );
+        const containerHTML = `<div style="${combinedStyles}">${childElements
+          .map((child) => generateElementHTML(child, `${itemAlias}.`))
+          .join("\n")}</div>`;
+
         html += containerHTML;
         html += `\n{% endfor %}`;
         return html;
       }
 
       switch (element.type) {
-        case 'container':
-          const childElements = elements.filter((el) => el.parentId === element.id);
-          html = `<div style="${combinedStyles}">${
-            childElements
-              .map((child) => generateElementHTML(child, itemPrefix))
-              .join('\n')
-          }</div>`;
+        case "container":
+          const childElements = elements.filter(
+            (el) => el.parentId === element.id
+          );
+          html = `<div style="${combinedStyles}">${childElements
+            .map((child) => generateElementHTML(child, itemPrefix))
+            .join("\n")}</div>`;
           break;
 
-        case 'text':
+        case "text":
           const content = element.dataBinding?.key
             ? `{{${itemPrefix}${element.dataBinding.key}}}`
             : element.content;
           html = `<p style="${combinedStyles}">${content}</p>`;
           break;
 
-        case 'image':
-          html = `<img src="${element.content}" alt="${element.styles.alt || ''}" style="${combinedStyles}"/>`;
+        case "image":
+          html = `<img src="${element.content}" alt="${
+            element.styles.alt || ""
+          }" style="${combinedStyles}"/>`;
           break;
 
         default:
@@ -172,17 +191,20 @@ export function TemplateEditor() {
       return html;
     };
 
-    const generateStyles = (styles: Element['styles']): string => {
+    const generateStyles = (styles: Element["styles"]): string => {
       return Object.entries(styles)
-        .filter(([_, value]) => value !== undefined && value !== '')
-        .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
-        .join('; ');
+        .filter(([_, value]) => value !== undefined && value !== "")
+        .map(
+          ([key, value]) =>
+            `${key.replace(/([A-Z])/g, "-$1").toLowerCase()}: ${value}`
+        )
+        .join("; ");
     };
 
     const rootElements = elements.filter((element) => !element.parentId);
     const bodyContent = rootElements
       .map((element) => generateElementHTML(element))
-      .join('\n');
+      .join("\n");
 
     const html = `<!DOCTYPE html>
 <html>
@@ -196,11 +218,11 @@ export function TemplateEditor() {
 </body>
 </html>`;
 
-    const blob = new Blob([html], { type: 'text/html' });
+    const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'template.html';
+    a.download = "template.html";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -217,22 +239,22 @@ export function TemplateEditor() {
       type,
       position,
       size: {
-        width: type === 'text' ? 300 : 200,
-        height: type === 'text' ? 40 : 200,
+        width: type === "text" ? 300 : 200,
+        height: type === "text" ? 40 : 200,
       },
-      content: type === 'text' ? 'Edit this text' : '',
+      content: type === "text" ? "Edit this text" : "",
       styles: {
-        backgroundColor: type === 'container' ? '#ffffff' : 'transparent',
-        color: '#515151',
-        padding: '0',
-        borderRadius: '0',
-        border: type === 'container' ? '1px solid #e2e8f0' : 'none',
-        fontSize: '12px',
-        fontWeight: 'normal',
-        margin: '0',
-        display: type === 'container' ? 'flex' : undefined,
-        flexDirection: type === 'container' ? 'column' : undefined,
-        gap: type === 'container' ? '4px' : undefined,
+        backgroundColor: type === "container" ? "#ffffff" : "transparent",
+        color: "#515151",
+        padding: "0",
+        borderRadius: "0",
+        border: type === "container" ? "1px solid #e2e8f0" : "none",
+        fontSize: "12px",
+        fontWeight: "normal",
+        margin: "0",
+        display: type === "container" ? "flex" : undefined,
+        flexDirection: type === "container" ? "column" : undefined,
+        gap: type === "container" ? "4px" : undefined,
       },
       conditions: [],
       parentId,
@@ -311,14 +333,16 @@ export function TemplateEditor() {
           pageSize={pageSize}
           customDimensions={customDimensions}
         />
-        {selectedElement && <PropertyPanel
-          element={selectedElement}
-          onUpdate={updateElement}
-          onDelete={deleteElement}
-          availableKeys={getAvailableKeys(selectedElement?.parentId)}
-          jsonData={jsonData}
-          isArrayPath={isArrayPath}
-        />}
+        {selectedElement && (
+          <PropertyPanel
+            element={selectedElement}
+            onUpdate={updateElement}
+            onDelete={deleteElement}
+            availableKeys={getAvailableKeys(selectedElement?.parentId)}
+            jsonData={jsonData}
+            isArrayPath={isArrayPath}
+          />
+        )}
       </div>
     </div>
   );
