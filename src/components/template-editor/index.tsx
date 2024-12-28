@@ -288,7 +288,7 @@ export function TemplateEditor() {
           />
           <HTMLUpload onTemplateGenerated={setElements} />
         </div>
-        <div className="flex gap-2 mr-4">
+        <div className="flex gap-2">
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline">Load JSON Data</Button>
