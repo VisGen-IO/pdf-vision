@@ -1,4 +1,4 @@
-import { Files, Home, Settings } from "lucide-react"
+import { Files, Home, Mails, Settings } from "lucide-react"
 import { FilePenLine } from "lucide-react";
 import {
   Sidebar,
@@ -23,6 +23,11 @@ const items = [
     title: "Templates",
     url: "/templates",
     icon: Files,
+  },
+  {
+    title: "Emails",
+    url: "/emails",
+    icon: Mails,
   },
   {
     title: "Editor",

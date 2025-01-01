@@ -15,6 +15,9 @@ export default function DashboardPage() {
 
       {/* Main Section */}
       <div className="bg-white p-6 rounded-xl shadow-md min-h-[calc(80svh)]">
+        <div>
+          <p className='text-xl extra-bold mb-4'> Recenet Activity</p>
+        </div>
         <DataTable columns={columns} data={mockDashboardData} />
       </div>
     </div>

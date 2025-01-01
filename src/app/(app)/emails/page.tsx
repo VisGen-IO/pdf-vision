@@ -13,7 +13,7 @@ export default function TemplatesPage() {
     <div className="w-full h-full p-4">
       {/* Header Section */}
       <div className="bg-white p-6 rounded-xl shadow-md flex justify-between mb-4">
-        <div> <h1 className='text-2xl extra-bold'>Document Templates</h1></div>
+        <div> <h1 className='text-2xl extra-bold'> Email Templates</h1></div>
         <div> 
           <Button variant="outline" onClick={() => {}} className='mr-4'>Upload template</Button>
           <Button onClick={() =>  router.push(`/editor`)}>Add template</Button>
