@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ElementToolbar } from "./element-toolbar";
 import { Canvas } from "./canvas";
 import { PropertyPanel } from "./property-panel";
@@ -23,8 +23,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { parseHTMLToTemplate } from "./html-parser";
 
-export function TemplateEditor() {
+export function TemplateEditor({template_data}:any) {
   const [elements, setElements] = useState<Element[]>([]);
   const [selectedElement, setSelectedElement] = useState<Element | null>(null);
   const [pageSize, setPageSize] = useState<PageSize>("A4");
@@ -276,6 +277,30 @@ export function TemplateEditor() {
     setSelectedElement(null);
   };
 
+  useEffect(() => {
+    if (!template_data || !template_data.html_content) return;
+  
+    const htmlContent = typeof template_data.html_content === "string"
+      ? template_data.html_content
+      : "";
+  
+    // Create a temporary container to parse the HTML
+    const container = document.createElement("div");
+    container.style.position = "absolute";
+    container.style.left = "-9999px";
+    container.style.width = "800px"; // Set a default width for proper style computation
+    document.body.appendChild(container);
+  
+    container.innerHTML = htmlContent;
+  
+    // Allow the browser to compute styles
+    requestAnimationFrame(() => {
+      const htmlElements = parseHTMLToTemplate(htmlContent);
+      document.body.removeChild(container);
+      setElements(htmlElements);
+    });
+  }, []);
+  
   return (
     <div className="flex flex-col h-screen">
       <div className="w-full p-4 border-b flex justify-between items-center  bg-white shadow-sm">

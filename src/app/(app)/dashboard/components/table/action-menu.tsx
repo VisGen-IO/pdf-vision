@@ -11,12 +11,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
 import { Dashboard } from '@/types';
+import { useRouter } from 'next/navigation';
 
 interface ActionMenuProps {
   template: Dashboard;
 }
 
 export function ActionMenu({ template }: ActionMenuProps) {
+  const router = useRouter();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -32,7 +35,7 @@ export function ActionMenu({ template }: ActionMenuProps) {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem>View template</DropdownMenuItem>
-        <DropdownMenuItem>Edit template</DropdownMenuItem>
+        <DropdownMenuItem onClick={() =>  router.push(`/editor/${template.id}`)}>Edit template</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="text-red-600">Delete template</DropdownMenuItem>
       </DropdownMenuContent>

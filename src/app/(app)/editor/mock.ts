@@ -1,0 +1,6 @@
+export const mockTemplateData = {
+  html_content:"<!DOCTYPE html>\n<html>\n\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Generated Template</title>\n</head>\n\n<body style=\"margin: 0; padding: 20px;\">\n  <p\n    style=\"background-color: transparent; color: #515151; padding: 0; border-radius: 0; border: none; font-size: 12px; font-weight: normal; margin: 0\">\n    Heloosjsdo</p>\n  <div\n    style=\"background-color: #ffffff; color: #515151; padding: 0; border-radius: 0; border: 1px solid #e2e8f0; font-size: 12px; font-weight: normal; margin: 0; display: flex; flex-direction: column; gap: 4px\">\n    <img src=\"\" alt=\"\"\n      style=\"background-color: transparent; color: #515151; padding: 0; border-radius: 0; border: none; font-size: 12px; font-weight: normal; margin: 0\" />\n    <p\n      style=\"background-color: transparent; color: #515151; padding: 0; border-radius: 0; border: none; font-size: 12px; font-weight: normal; margin: 0\">\n      image text</p>\n  </div>\n</body>\n\n</html>",
+  template_name:'Test Template',
+  type:'PDF',
+  status:'Active'
+}
