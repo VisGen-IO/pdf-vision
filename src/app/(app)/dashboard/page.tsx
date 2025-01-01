@@ -9,12 +9,12 @@ export default function DashboardPage() {
   return (
     <div className="w-full h-full p-4">
       {/* Header Section */}
-      <div className="flex flex-col gap-4 mb-4 pt-0">
+      {/* <div className="flex flex-col gap-4 mb-4 pt-0">
         <StatsCards />
-      </div>
+      </div> */}
 
       {/* Main Section */}
-      <div className="bg-white p-6 rounded-xl shadow-md">
+      <div className="bg-white p-6 rounded-xl shadow-md ">
         <DataTable columns={columns} data={mockDashboardData} />
       </div>
     </div>
