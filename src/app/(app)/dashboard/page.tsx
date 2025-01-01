@@ -14,7 +14,7 @@ export default function DashboardPage() {
       </div> */}
 
       {/* Main Section */}
-      <div className="bg-white p-6 rounded-xl shadow-md ">
+      <div className="bg-white p-6 rounded-xl shadow-md min-h-[calc(80svh)]">
         <DataTable columns={columns} data={mockDashboardData} />
       </div>
     </div>

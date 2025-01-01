@@ -20,8 +20,8 @@ const items = [
     icon: Home,
   },
   {
-    title: "PDF templates",
-    url: "/pdf-templates",
+    title: "Templates",
+    url: "/templates",
     icon: Files,
   },
   {
