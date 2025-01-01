@@ -1,35 +1,22 @@
 'use client';
-import { Card } from '@/components/ui/card';
-import React from 'react';
 
-function Page() {
+import { DataTable } from '@/components/data-table';
+import { columns } from './components/table/columns';
+import { StatsCards } from './components/stat-cards';
+import { mockDashboardData } from './data/mock-data';
+
+export default function DashboardPage() {
   return (
     <div className="w-full h-full p-4">
       {/* Header Section */}
       <div className="flex flex-col gap-4 mb-4 pt-0">
-        {/* Grid Section */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <Card className="h-40 w-full bg-foreground/10  rounded-xl shadow-md">
-            {/* Add content inside the Card if necessary */}
-          </Card>
-          <Card className="h-40 w-full bg-foreground/10  rounded-xl shadow-md">
-            {/* Add content inside the Card if necessary */}
-          </Card>
-          <Card className="h-40 w-full bg-foreground/10  rounded-xl shadow-md">
-            {/* Add content inside the Card if necessary */}
-          </Card>
-          <Card className="h-40 w-full bg-foreground/10  rounded-xl shadow-md">
-            {/* Add content inside the Card if necessary */}
-          </Card>
-        </div>
+        <StatsCards />
       </div>
 
       {/* Main Section */}
-      <div className=" h-full w-full rounded-xl bg-foreground/10 shadow-lg md:min-h-[300px] flex justify-center items-center">
-        {/* Add content or children elements here */}
+      <div className="bg-white p-6 rounded-xl shadow-md">
+        <DataTable columns={columns} data={mockDashboardData} />
       </div>
     </div>
   );
 }
-
-export default Page;
