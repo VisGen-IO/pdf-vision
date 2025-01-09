@@ -49,6 +49,7 @@ export function Canvas({
 
   const handleDrop = (e: React.DragEvent, parentId?: string) => {
     e.preventDefault();
+    e.stopPropagation();
     const type = e.dataTransfer.getData('elementType') as Element['type'];
     if (!type || !canvasRef.current) return;
 
